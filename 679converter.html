@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>679Converter - Fast & Accurate Metric Conversions</title>
+    <meta name="description" content="Convert metrics instantly - length, area, volume, speed, data, and more. No registration required.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --glow: rgba(99, 102, 241, 0.3);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #818cf8;
+            --accent-hover: #6366f1;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --glow: rgba(129, 140, 248, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
+            background-image: 
+                linear-gradient(45deg, var(--accent) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--accent) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--accent) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--accent) 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+        }
+
+        header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px var(--glow);
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+
+        .category-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .category-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 24px var(--glow);
+        }
+
+        .category-card.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: white;
+            box-shadow: 0 8px 16px var(--glow);
+        }
+
+        .category-card.active .category-icon,
+        .category-card.active .category-name {
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .converter-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 8px 16px var(--shadow);
+            display: none;
+        }
+
+        .converter-section.active {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .converter-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--glow);
+        }
+
+        .swap-button {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--glow);
+        }
+
+        .swap-button:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .result-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 6px 12px var(--shadow);
+        }
+
+        .result-unit {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            word-break: break-all;
+            margin-bottom: 0.75rem;
+        }
+
+        .copy-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .copy-button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .copy-button.copied {
+            background: #10b981;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        .no-selection {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-selection h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .categories {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 0.75rem;
+            }
+
+            .converter-section {
+                padding: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .swap-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <header>
+        <div class="logo">
+            <div class="logo-icon">⇄</div>
+            <span>679Converter</span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-icon">🌙</span>
+            <span id="theme-text">Dark</span>
+        </button>
+    </header>
+
+    <div class="container">
+        <div class="categories" id="categories"></div>
+        
+        <div id="converter-container"></div>
+
+        <div class="no-selection" id="no-selection">
+            <h2>🚀 Select a Category to Start Converting</h2>
+            <p>Choose any conversion type above to begin</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 679Converter. All conversions performed client-side. No data stored.</p>
+    </footer>
+
+    <script>
+        const conversions = {
+            length: {
+                name: 'Length',
+                icon: '📏',
+                units: {
+                    meter: { name: 'Meters', factor: 1 },
+                    kilometer: { name: 'Kilometers', factor: 0.001 },
+                    centimeter: { name: 'Centimeters', factor: 100 },
+                    millimeter: { name: 'Millimeters', factor: 1000 },
+                    mile: { name: 'Miles', factor: 0.000621371 },
+                    yard: { name: 'Yards', factor: 1.09361 },
+                    foot: { name: 'Feet', factor: 3.28084 },
+                    inch: { name: 'Inches', factor: 39.3701 }
+                }
+            },
+            area: {
+                name: 'Area',
+                icon: '⬜',
+                units: {
+                    square_meter: { name: 'Square Meters', factor: 1 },
+                    square_kilometer: { name: 'Square Kilometers', factor: 0.000001 },
+                    square_centimeter: { name: 'Square Centimeters', factor: 10000 },
+                    square_mile: { name: 'Square Miles', factor: 3.861e-7 },
+                    square_yard: { name: 'Square Yards', factor: 1.19599 },
+                    square_foot: { name: 'Square Feet', factor: 10.7639 },
+                    acre: { name: 'Acres', factor: 0.000247105 },
+                    hectare: { name: 'Hectares', factor: 0.0001 }
+                }
+            },
+            volume: {
+                name: 'Volume',
+                icon: '🧊',
+                units: {
+                    liter: { name: 'Liters', factor: 1 },
+                    milliliter: { name: 'Milliliters', factor: 1000 },
+                    cubic_meter: { name: 'Cubic Meters', factor: 0.001 },
+                    gallon_us: { name: 'Gallons (US)', factor: 0.264172 },
+                    gallon_uk: { name: 'Gallons (UK)', factor: 0.219969 },
+                    quart: { name: 'Quarts', factor: 1.05669 },
+                    pint: { name: 'Pints', factor: 2.11338 },
+                    cup: { name: 'Cups', factor: 4.22675 },
+                    fluid_ounce: { name: 'Fluid Ounces', factor: 33.814 }
+                }
+            },
+            weight: {
+                name: 'Weight/Mass',
+                icon: '⚖️',
+                units: {
+                    kilogram: { name: 'Kilograms', factor: 1 },
+                    gram: { name: 'Grams', factor: 1000 },
+                    milligram: { name: 'Milligrams', factor: 1000000 },
+                    pound: { name: 'Pounds', factor: 2.20462 },
+                    ounce: { name: 'Ounces', factor: 35.274 },
+                    ton_metric: { name: 'Metric Tons', factor: 0.001 },
+                    ton_us: { name: 'US Tons', factor: 0.00110231 },
+                    stone: { name: 'Stones', factor: 0.157473 }
+                }
+            },
+            temperature: {
+                name: 'Temperature',
+                icon: '🌡️',
+                units: {
+                    celsius: { name: 'Celsius' },
+                    fahrenheit: { name: 'Fahrenheit' },
+                    kelvin: { name: 'Kelvin' }
+                },
+                convert: function(value, from, to) {
+                    let celsius;
+                    if (from === 'celsius') celsius = value;
+                    else if (from === 'fahrenheit') celsius = (value - 32) * 5/9;
+                    else if (from === 'kelvin') celsius = value - 273.15;
+                    
+                    if (to === 'celsius') return celsius;
+                    else if (to === 'fahrenheit') return celsius * 9/5 + 32;
+                    else if (to === 'kelvin') return celsius + 273.15;
+                }
+            },
+            speed: {
+                name: 'Speed',
+                icon: '🚄',
+                units: {
+                    meter_per_second: { name: 'Meters/Second', factor: 1 },
+                    kilometer_per_hour: { name: 'Kilometers/Hour', factor: 3.6 },
+                    mile_per_hour: { name: 'Miles/Hour', factor: 2.23694 },
+                    foot_per_second: { name: 'Feet/Second', factor: 3.28084 },
+                    knot: { name: 'Knots', factor: 1.94384 }
+                }
+            },
+            data: {
+                name: 'Data Storage',
+                icon: '💾',
+                units: {
+                    byte: { name: 'Bytes', factor: 1 },
+                    kilobyte: { name: 'Kilobytes (KB)', factor: 1/1024 },
+                    megabyte: { name: 'Megabytes (MB)', factor: 1/(1024*1024) },
+                    gigabyte: { name: 'Gigabytes (GB)', factor: 1/(1024*1024*1024) },
+                    terabyte: { name: 'Terabytes (TB)', factor: 1/(1024*1024*1024*1024) },
+                    bit: { name: 'Bits', factor: 8 },
+                    kilobit: { name: 'Kilobits (Kb)', factor: 8/1024 },
+                    megabit: { name: 'Megabits (Mb)', factor: 8/(1024*1024) }
+                }
+            },
+            time: {
+                name: 'Time',
+                icon: '⏱️',
+                units: {
+                    second: { name: 'Seconds', factor: 1 },
+                    minute: { name: 'Minutes', factor: 1/60 },
+                    hour: { name: 'Hours', factor: 1/3600 },
+                    day: { name: 'Days', factor: 1/86400 },
+                    week: { name: 'Weeks', factor: 1/604800 },
+                    month: { name: 'Months (30 days)', factor: 1/2592000 },
+                    year: { name: 'Years (365 days)', factor: 1/31536000 }
+                }
+            },
+            energy: {
+                name: 'Energy',
+                icon: '⚡',
+                units: {
+                    joule: { name: 'Joules', factor: 1 },
+                    kilojoule: { name: 'Kilojoules', factor: 0.001 },
+                    calorie: { name: 'Calories', factor: 0.239006 },
+                    kilocalorie: { name: 'Kilocalories', factor: 0.000239006 },
+                    watt_hour: { name: 'Watt-hours', factor: 0.000277778 },
+                    kilowatt_hour: { name: 'Kilowatt-hours', factor: 2.77778e-7 },
+                    btu: { name: 'BTU', factor: 0.000947817 }
+                }
+            },
+            pressure: {
+                name: 'Pressure',
+                icon: '🔘',
+                units: {
+                    pascal: { name: 'Pascals', factor: 1 },
+                    kilopascal: { name: 'Kilopascals', factor: 0.001 },
+                    bar: { name: 'Bars', factor: 0.00001 },
+                    psi: { name: 'PSI', factor: 0.000145038 },
+                    atmosphere: { name: 'Atmospheres', factor: 9.86923e-6 },
+                    mmhg: { name: 'mmHg', factor: 0.00750062 }
+                }
+            }
+        };
+
+        let currentCategory = null;
+        let currentFromUnit = null;
+        let currentToUnit = null;
+
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+            
+            Object.keys(conversions).forEach(key => {
+                const category = conversions[key];
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="category-icon">${category.icon}</div>
+                    <div class="category-name">${category.name}</div>
+                `;
+                card.onclick = () => selectCategory(key);
+                container.appendChild(card);
+            });
+        }
+
+        function selectCategory(categoryKey) {
+            currentCategory = categoryKey;
+            
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            const units = Object.keys(conversions[categoryKey].units);
+            currentFromUnit = units[0];
+            currentToUnit = units[1] || units[0];
+            
+            renderConverter();
+            document.getElementById('no-selection').style.display = 'none';
+        }
+
+        function renderConverter() {
+            const container = document.getElementById('converter-container');
+            const category = conversions[currentCategory];
+            const units = Object.keys(category.units);
+            
+            container.innerHTML = `
+                <div class="converter-section active">
+                    <h2 class="converter-title">${category.icon} ${category.name} Converter</h2>
+                    
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label>From</label>
+                            <select id="from-unit" onchange="updateFromUnit()">
+                                ${units.map(unit => `
+                                    <option value="${unit}" ${unit === currentFromUnit ? 'selected' : ''}>
+                                        ${category.units[unit].name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <label>Value</label>
+                            <input type="number" id="input-value" placeholder="Enter value" 
+                                   oninput="convert()" step="any" value="1">
+                        </div>
+                        
+                        <button class="swap-button" onclick="swapUnits()" title="Swap units">⇄</button>
+                        
+                        <div class="input-wrapper">
+                            <label>To</label>
+                            <select id="to-unit" onchange="updateToUnit()">
+                                ${units.map(unit => `
+                                    <option value="${unit}" ${unit === currentToUnit ? 'selected' : ''}>
+                                        ${category.units[unit].name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="results-grid" id="results"></div>
+                </div>
+            `;
+            
+            convert();
+        }
+
+        function updateFromUnit() {
+            currentFromUnit = document.getElementById('from-unit').value;
+            convert();
+        }
+
+        function updateToUnit() {
+            currentToUnit = document.getElementById('to-unit').value;
+            convert();
+        }
+
+        function swapUnits() {
+            const temp = currentFromUnit;
+            currentFromUnit = currentToUnit;
+            currentToUnit = temp;
+            renderConverter();
+        }
+
+        function convert() {
+            const value = parseFloat(document.getElementById('input-value').value);
+            if (isNaN(value)) {
+                document.getElementById('results').innerHTML = '';
+                return;
+            }
+            
+            const category = conversions[currentCategory];
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            Object.keys(category.units).forEach(unitKey => {
+                let convertedValue;
+                
+                if (currentCategory === 'temperature') {
+                    convertedValue = category.convert(value, currentFromUnit, unitKey);
+                } else {
+                    const fromFactor = category.units[currentFromUnit].factor;
+                    const toFactor = category.units[unitKey].factor;
+                    convertedValue = (value / fromFactor) * toFactor;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <div class="result-unit">${category.units[unitKey].name}</div>
+                    <div class="result-value">${formatNumber(convertedValue)}</div>
+                    <button class="copy-button" onclick="copyToClipboard('${convertedValue}', this)">
+                        📋 Copy
+                    </button>
+                `;
+                results.appendChild(card);
+            });
+        }
+
+        function formatNumber(num) {
+            if (Math.abs(num) < 0.0001 && num !== 0) {
+                return num.toExponential(4);
+            }
+            if (Math.abs(num) > 1000000) {
+                return num.toExponential(4);
+            }
+            return num.toFixed(6).replace(/\.?0+$/, '');
+        }
+
+        function copyToClipboard(value, button) {
+            navigator.clipboard.writeText(value).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            } else {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            }
+        }
+
+        // Initialize
+        renderCategories();
+    </script>
+</body>
+</html>
