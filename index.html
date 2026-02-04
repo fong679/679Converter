@@ -3,28 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>679Converter - Fast & Accurate Metric Conversions</title>
     <meta name="description" content="Convert metrics instantly - length, area, volume, speed, data, and more. No registration required.">
+    <link rel="canonical" href="https://fong679.github.io/679Converter/">
+    
+    <!-- Favicon SVG -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ec4899;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Cpath d='M30 35 L45 50 L30 65' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M70 35 L55 50 L70 65' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
+            --bg-primary: #fafafa;
+            --bg-secondary: #f5f5f5;
             --bg-card: #ffffff;
             --text-primary: #1a1a1a;
             --text-secondary: #6b7280;
             --accent: #6366f1;
             --accent-hover: #4f46e5;
             --border: #e5e7eb;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --glow: rgba(99, 102, 241, 0.3);
+            --shadow: rgba(0, 0, 0, 0.05);
+            --glow: rgba(99, 102, 241, 0.15);
+            --pattern-opacity: 0.02;
         }
-
         [data-theme="dark"] {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
@@ -36,8 +43,8 @@
             --border: #334155;
             --shadow: rgba(0, 0, 0, 0.5);
             --glow: rgba(129, 140, 248, 0.4);
+            --pattern-opacity: 0.03;
         }
-
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
@@ -46,7 +53,6 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-
         .background-pattern {
             position: fixed;
             top: 0;
@@ -54,16 +60,14 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.03;
+            opacity: var(--pattern-opacity);
             background-image: 
-                linear-gradient(45deg, var(--accent) 25%, transparent 25%),
-                linear-gradient(-45deg, var(--accent) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, var(--accent) 75%),
-                linear-gradient(-45deg, transparent 75%, var(--accent) 75%);
-            background-size: 40px 40px;
-            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+                radial-gradient(circle at 20% 50%, var(--accent) 1px, transparent 1px),
+                radial-gradient(circle at 80% 80%, var(--accent) 1px, transparent 1px),
+                radial-gradient(circle at 40% 20%, var(--accent) 1px, transparent 1px);
+            background-size: 50px 50px, 80px 80px, 60px 60px;
+            background-position: 0 0, 40px 40px, 20px 20px;
         }
-
         header {
             background: var(--bg-card);
             border-bottom: 1px solid var(--border);
@@ -71,13 +75,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px -1px var(--shadow);
+            box-shadow: 0 1px 3px var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
         }
-
         .logo {
             display: flex;
             align-items: center;
@@ -89,21 +92,19 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), #ec4899);
-            border-radius: 10px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 1.25rem;
-            font-weight: bold;
-            box-shadow: 0 4px 12px var(--glow);
+            position: relative;
         }
-
+        .logo-icon svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 12px var(--glow));
+        }
         .theme-toggle {
             background: var(--bg-secondary);
             border: 2px solid var(--border);
@@ -117,26 +118,22 @@
             color: var(--text-primary);
             font-weight: 600;
         }
-
         .theme-toggle:hover {
             transform: scale(1.05);
             border-color: var(--accent);
             box-shadow: 0 0 20px var(--glow);
         }
-
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
-
         .categories {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1.25rem;
             margin: 2rem 0;
         }
-
         .category-card {
             background: var(--bg-card);
             border: 2px solid var(--border);
@@ -148,7 +145,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .category-card::before {
             content: '';
             position: absolute;
@@ -161,59 +157,50 @@
             transition: opacity 0.3s ease;
             z-index: 0;
         }
-
         .category-card:hover::before {
             opacity: 0.1;
         }
-
         .category-card:hover {
             transform: translateY(-4px);
             border-color: var(--accent);
-            box-shadow: 0 12px 24px var(--glow);
+            box-shadow: 0 8px 20px var(--glow);
         }
-
         .category-card.active {
             border-color: var(--accent);
             background: linear-gradient(135deg, var(--accent), #ec4899);
             color: white;
             box-shadow: 0 8px 16px var(--glow);
         }
-
         .category-card.active .category-icon,
         .category-card.active .category-name {
             position: relative;
             z-index: 1;
         }
-
         .category-icon {
             font-size: 2.5rem;
             margin-bottom: 0.75rem;
             position: relative;
             z-index: 1;
         }
-
         .category-name {
             font-weight: 600;
             font-size: 1rem;
             position: relative;
             z-index: 1;
         }
-
         .converter-section {
             background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 20px;
             padding: 2.5rem;
             margin: 2rem 0;
-            box-shadow: 0 8px 16px var(--shadow);
+            box-shadow: 0 2px 8px var(--shadow);
             display: none;
         }
-
         .converter-section.active {
             display: block;
             animation: slideIn 0.4s ease;
         }
-
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -224,7 +211,6 @@
                 transform: translateY(0);
             }
         }
-
         .converter-title {
             font-size: 2rem;
             font-weight: 700;
@@ -235,19 +221,16 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .input-group {
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
         }
-
         .input-wrapper {
             flex: 1;
             min-width: 200px;
         }
-
         label {
             display: block;
             margin-bottom: 0.5rem;
@@ -257,7 +240,6 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-
         input[type="number"],
         select {
             width: 100%;
@@ -271,14 +253,12 @@
             transition: all 0.3s ease;
             font-family: inherit;
         }
-
         input[type="number"]:focus,
         select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 4px var(--glow);
         }
-
         .swap-button {
             align-self: flex-end;
             background: linear-gradient(135deg, var(--accent), #ec4899);
@@ -290,19 +270,27 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px var(--glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
         .swap-button:hover {
-            transform: rotate(180deg) scale(1.1);
+            transform: scale(1.05);
         }
-
+        .swap-button svg {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+        .swap-button:hover svg {
+            transform: rotate(180deg);
+        }
         .results-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.25rem;
             margin-top: 2rem;
         }
-
         .result-card {
             background: var(--bg-secondary);
             border: 2px solid var(--border);
@@ -311,13 +299,11 @@
             transition: all 0.3s ease;
             position: relative;
         }
-
         .result-card:hover {
             transform: translateY(-2px);
             border-color: var(--accent);
-            box-shadow: 0 6px 12px var(--shadow);
+            box-shadow: 0 4px 12px var(--shadow);
         }
-
         .result-unit {
             font-size: 0.875rem;
             font-weight: 600;
@@ -326,7 +312,6 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-
         .result-value {
             font-size: 1.5rem;
             font-weight: 700;
@@ -334,7 +319,6 @@
             word-break: break-all;
             margin-bottom: 0.75rem;
         }
-
         .copy-button {
             background: var(--accent);
             color: white;
@@ -347,16 +331,13 @@
             transition: all 0.2s ease;
             width: 100%;
         }
-
         .copy-button:hover {
             background: var(--accent-hover);
             transform: scale(1.02);
         }
-
         .copy-button.copied {
             background: #10b981;
         }
-
         footer {
             text-align: center;
             padding: 2rem;
@@ -364,51 +345,40 @@
             border-top: 1px solid var(--border);
             margin-top: 4rem;
         }
-
         .no-selection {
             text-align: center;
             padding: 4rem 2rem;
             color: var(--text-secondary);
         }
-
         .no-selection h2 {
             font-size: 2rem;
             margin-bottom: 1rem;
             color: var(--text-primary);
         }
-
         @media (max-width: 768px) {
             header {
                 padding: 1rem;
             }
-
             .logo {
                 font-size: 1.25rem;
             }
-
             .logo-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
+                width: 35px;
+                height: 35px;
             }
-
             .container {
                 padding: 1rem;
             }
-
             .categories {
                 grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                 gap: 0.75rem;
             }
-
             .converter-section {
                 padding: 1.5rem;
             }
-
             .input-group {
                 flex-direction: column;
             }
-
             .swap-button {
                 width: 100%;
             }
@@ -420,7 +390,19 @@
     
     <header>
         <div class="logo">
-            <div class="logo-icon">⇄</div>
+            <div class="logo-icon">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
+                    <path d="M30 35 L45 50 L30 65" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <path d="M70 35 L55 50 L70 65" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+            </div>
             <span>679Converter</span>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()">
@@ -428,22 +410,18 @@
             <span id="theme-text">Dark</span>
         </button>
     </header>
-
     <div class="container">
         <div class="categories" id="categories"></div>
         
         <div id="converter-container"></div>
-
         <div class="no-selection" id="no-selection">
             <h2>🚀 Select a Category to Start Converting</h2>
             <p>Choose any conversion type above to begin</p>
         </div>
     </div>
-
     <footer>
         <p>&copy; 2024 679Converter. All conversions performed client-side. No data stored.</p>
     </footer>
-
     <script>
         const conversions = {
             length: {
@@ -586,11 +564,9 @@
                 }
             }
         };
-
         let currentCategory = null;
         let currentFromUnit = null;
         let currentToUnit = null;
-
         function renderCategories() {
             const container = document.getElementById('categories');
             container.innerHTML = '';
@@ -607,7 +583,6 @@
                 container.appendChild(card);
             });
         }
-
         function selectCategory(categoryKey) {
             currentCategory = categoryKey;
             
@@ -623,7 +598,6 @@
             renderConverter();
             document.getElementById('no-selection').style.display = 'none';
         }
-
         function renderConverter() {
             const container = document.getElementById('converter-container');
             const category = conversions[currentCategory];
@@ -651,7 +625,14 @@
                                    oninput="convert()" step="any" value="1">
                         </div>
                         
-                        <button class="swap-button" onclick="swapUnits()" title="Swap units">⇄</button>
+                        <button class="swap-button" onclick="swapUnits()" title="Swap units">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="17 1 21 5 17 9"></polyline>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <polyline points="7 23 3 19 7 15"></polyline>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                        </button>
                         
                         <div class="input-wrapper">
                             <label>To</label>
@@ -671,24 +652,20 @@
             
             convert();
         }
-
         function updateFromUnit() {
             currentFromUnit = document.getElementById('from-unit').value;
             convert();
         }
-
         function updateToUnit() {
             currentToUnit = document.getElementById('to-unit').value;
             convert();
         }
-
         function swapUnits() {
             const temp = currentFromUnit;
             currentFromUnit = currentToUnit;
             currentToUnit = temp;
             renderConverter();
         }
-
         function convert() {
             const value = parseFloat(document.getElementById('input-value').value);
             if (isNaN(value)) {
@@ -723,7 +700,6 @@
                 results.appendChild(card);
             });
         }
-
         function formatNumber(num) {
             if (Math.abs(num) < 0.0001 && num !== 0) {
                 return num.toExponential(4);
@@ -733,7 +709,6 @@
             }
             return num.toFixed(6).replace(/\.?0+$/, '');
         }
-
         function copyToClipboard(value, button) {
             navigator.clipboard.writeText(value).then(() => {
                 const originalText = button.innerHTML;
@@ -745,13 +720,13 @@
                 }, 2000);
             });
         }
-
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
             html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
             
             const icon = document.getElementById('theme-icon');
             const text = document.getElementById('theme-text');
@@ -764,7 +739,24 @@
                 text.textContent = 'Light';
             }
         }
-
+        
+        // Initialize theme from localStorage
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const icon = document.getElementById('theme-icon');
+                const text = document.getElementById('theme-text');
+                if (savedTheme === 'dark') {
+                    icon.textContent = '🌙';
+                    text.textContent = 'Dark';
+                } else {
+                    icon.textContent = '☀️';
+                    text.textContent = 'Light';
+                }
+            }
+        })();
+        
         // Initialize
         renderCategories();
     </script>
