@@ -136,12 +136,14 @@
             padding: 2rem;
         }
         .categories {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 1.25rem;
             margin: 2rem 0;
         }
         .category-card {
+            flex: 0 1 180px;
             background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 16px;
@@ -377,8 +379,10 @@
                 padding: 1rem;
             }
             .categories {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                 gap: 0.75rem;
+            }
+            .category-card {
+                flex: 0 1 140px;
             }
             .converter-section {
                 padding: 1.5rem;
@@ -440,6 +444,48 @@
         .highlight-card {
             border-color: var(--accent) !important;
             box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        /* ── Skeleton loading ── */
+        @keyframes shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg,
+                var(--bg-secondary) 25%,
+                var(--border) 50%,
+                var(--bg-secondary) 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s infinite linear;
+            border-radius: 8px;
+        }
+        .skeleton-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .skeleton-line {
+            height: 14px;
+            margin-bottom: 0.75rem;
+        }
+        .skeleton-value {
+            height: 32px;
+            margin-bottom: 1rem;
+            width: 70%;
+        }
+        .skeleton-btn {
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        /* ── Number count-up animation ── */
+        .result-value {
+            transition: opacity 0.15s ease;
+        }
+        .result-value.counting {
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -712,6 +758,8 @@
             
             try {
                 if (statusEl) statusEl.textContent = 'Fetching live rates…';
+                // Show skeleton cards while fetching
+                showSkeletons('currency-results-grid', 12);
                 const data = await fetchRates(currencyFrom);
                 cachedRates = data;
                 
@@ -743,10 +791,15 @@
                         card.className = 'result-card' + (code === currencyTo ? ' highlight-card' : '');
                         card.innerHTML = `
                             <div class="result-unit">${code} · ${CURRENCY_LIST[code]}</div>
-                            <div class="result-value">${val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}</div>
+                            <div class="result-value" data-target="${val}" data-exp="false">0</div>
                             <button class="copy-button" onclick="copyToClipboard('${val.toFixed(4)}', this)">📋 Copy</button>
                         `;
                         grid.appendChild(card);
+                    });
+                    // Trigger count-up on currency cards
+                    grid.querySelectorAll('.result-value[data-target]').forEach(el => {
+                        const target = parseFloat(el.dataset.target);
+                        countUp(el, target, false);
                     });
                 }
             } catch (e) {
@@ -874,6 +927,45 @@
             currentToUnit = temp;
             renderConverter();
         }
+
+        // Animate a number from 0 to target in ~400ms
+        function countUp(el, target, isExponential) {
+            const duration = 380;
+            const steps = 24;
+            const interval = duration / steps;
+            let step = 0;
+            el.classList.add('counting');
+            const timer = setInterval(() => {
+                step++;
+                const progress = step / steps;
+                // ease-out quad
+                const eased = 1 - (1 - progress) * (1 - progress);
+                const current = target * eased;
+                el.textContent = isExponential
+                    ? current.toExponential(4)
+                    : formatNumber(current);
+                if (step >= steps) {
+                    clearInterval(timer);
+                    el.textContent = isExponential ? target.toExponential(4) : formatNumber(target);
+                    el.classList.remove('counting');
+                }
+            }, interval);
+        }
+
+        // Show skeleton cards in the results grid
+        function showSkeletons(containerId, count) {
+            const grid = document.getElementById(containerId);
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                grid.innerHTML += `
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-line" style="width:55%"></div>
+                        <div class="skeleton skeleton-value"></div>
+                        <div class="skeleton skeleton-btn"></div>
+                    </div>`;
+            }
+        }
         function convert() {
             const value = parseFloat(document.getElementById('input-value').value);
             if (isNaN(value)) {
@@ -885,6 +977,9 @@
             const results = document.getElementById('results');
             results.innerHTML = '';
             
+            // Show skeletons briefly before animating in
+            const unitCount = Object.keys(category.units).length;
+            results.innerHTML = '';
             Object.keys(category.units).forEach(unitKey => {
                 let convertedValue;
                 
@@ -898,14 +993,22 @@
                 
                 const card = document.createElement('div');
                 card.className = 'result-card';
+                const isExp = Math.abs(convertedValue) < 0.0001 && convertedValue !== 0
+                           || Math.abs(convertedValue) > 1000000;
                 card.innerHTML = `
                     <div class="result-unit">${category.units[unitKey].name}</div>
-                    <div class="result-value">${formatNumber(convertedValue)}</div>
+                    <div class="result-value" data-target="${convertedValue}" data-exp="${isExp}">0</div>
                     <button class="copy-button" onclick="copyToClipboard('${convertedValue}', this)">
                         📋 Copy
                     </button>
                 `;
                 results.appendChild(card);
+            });
+            // Trigger count-up on all freshly added result values
+            results.querySelectorAll('.result-value[data-target]').forEach(el => {
+                const target = parseFloat(el.dataset.target);
+                const isExp = el.dataset.exp === 'true';
+                countUp(el, target, isExp);
             });
         }
         function formatNumber(num) {
