@@ -390,6 +390,57 @@
                 width: 100%;
             }
         }
+        /* ── Currency styles ── */
+        .currency-live-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.35rem 0.9rem;
+            border-radius: 50px;
+            margin-bottom: 1.75rem;
+            letter-spacing: 0.04em;
+        }
+        .currency-result-main {
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: white;
+            min-height: 80px;
+        }
+        .currency-main-from {
+            font-size: 1.4rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        .currency-equals {
+            font-size: 1.2rem;
+            opacity: 0.7;
+            margin: 0.25rem 0;
+        }
+        .currency-main-to {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        .currency-rate-note {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        .currency-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .highlight-card {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--glow);
+        }
     </style>
 </head>
 <body>
@@ -571,15 +622,160 @@
                 }
             }
         };
+        const allCategories = { ...conversions, currency: { name: 'Currency', icon: '💱' } };
+        // Currency is handled separately (real-time)
         let currentCategory = null;
         let currentFromUnit = null;
         let currentToUnit = null;
+        
+        // ── Currency live rates ──────────────────────────────────────────────
+        const CURRENCY_LIST = {
+            USD: 'US Dollar', EUR: 'Euro', GBP: 'British Pound',
+            JPY: 'Japanese Yen', AUD: 'Australian Dollar', CAD: 'Canadian Dollar',
+            CHF: 'Swiss Franc', CNY: 'Chinese Yuan', HKD: 'Hong Kong Dollar',
+            NZD: 'New Zealand Dollar', SEK: 'Swedish Krona', KRW: 'South Korean Won',
+            SGD: 'Singapore Dollar', NOK: 'Norwegian Krone', MXN: 'Mexican Peso',
+            INR: 'Indian Rupee', BRL: 'Brazilian Real', ZAR: 'South African Rand',
+            TRY: 'Turkish Lira', AED: 'UAE Dirham', THB: 'Thai Baht',
+            MYR: 'Malaysian Ringgit', IDR: 'Indonesian Rupiah', PHP: 'Philippine Peso',
+            PLN: 'Polish Zloty', DKK: 'Danish Krone', HUF: 'Hungarian Forint',
+            CZK: 'Czech Koruna', ILS: 'Israeli Shekel', SAR: 'Saudi Riyal',
+            FJD: 'Fijian Dollar', PGK: 'Papua New Guinean Kina', SBD: 'Solomon Islands Dollar',
+            WST: 'Samoan Tala', VUV: 'Vanuatu Vatu', TOP: 'Tongan Pa\'anga',
+        };
+        let cachedRates = null;   // { base, rates, timestamp }
+        let currencyFrom = 'USD';
+        let currencyTo = 'EUR';
+        
+        async function fetchRates(base) {
+            // Returns rates relative to `base`
+            const url = `https://api.frankfurter.app/latest?from=${base}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Rate fetch failed');
+            return await res.json();
+        }
+        
+        async function renderCurrencyConverter() {
+            const container = document.getElementById('converter-container');
+            container.innerHTML = `
+                <div class="converter-section active">
+                    <h2 class="converter-title">💱 Currency Converter</h2>
+                    <div class="currency-live-badge">🟢 Live Rates via Frankfurter</div>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label>From</label>
+                            <select id="currency-from" onchange="onCurrencyChange()">
+                                ${Object.entries(CURRENCY_LIST).map(([code, name]) =>
+                                    `<option value="${code}" ${code === currencyFrom ? 'selected' : ''}>${code} – ${name}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="input-wrapper">
+                            <label>Amount</label>
+                            <input type="number" id="currency-amount" placeholder="Enter amount"
+                                   oninput="convertCurrency()" step="any" value="1" min="0">
+                        </div>
+                        <button class="swap-button" onclick="swapCurrency()" title="Swap currencies">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="17 1 21 5 17 9"></polyline>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <polyline points="7 23 3 19 7 15"></polyline>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                        </button>
+                        <div class="input-wrapper">
+                            <label>To</label>
+                            <select id="currency-to" onchange="onCurrencyChange()">
+                                ${Object.entries(CURRENCY_LIST).map(([code, name]) =>
+                                    `<option value="${code}" ${code === currencyTo ? 'selected' : ''}>${code} – ${name}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div id="currency-result-main" class="currency-result-main"></div>
+                    <div id="currency-status" class="currency-status">Fetching live rates…</div>
+                    <div class="results-grid" id="currency-results-grid"></div>
+                </div>
+            `;
+            document.getElementById('no-selection').style.display = 'none';
+            await loadAndConvertCurrency();
+        }
+        
+        async function loadAndConvertCurrency() {
+            const statusEl = document.getElementById('currency-status');
+            const mainEl   = document.getElementById('currency-result-main');
+            if (!mainEl) return;
+            
+            currencyFrom = document.getElementById('currency-from')?.value || currencyFrom;
+            currencyTo   = document.getElementById('currency-to')?.value   || currencyTo;
+            const amount = parseFloat(document.getElementById('currency-amount')?.value) || 1;
+            
+            try {
+                if (statusEl) statusEl.textContent = 'Fetching live rates…';
+                const data = await fetchRates(currencyFrom);
+                cachedRates = data;
+                
+                // Main result
+                const rate = data.rates[currencyTo];
+                const converted = amount * rate;
+                if (mainEl) {
+                    mainEl.innerHTML = `
+                        <div class="currency-main-from">${amount.toLocaleString()} ${currencyFrom}</div>
+                        <div class="currency-equals">=</div>
+                        <div class="currency-main-to">${converted.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})} ${currencyTo}</div>
+                        <div class="currency-rate-note">1 ${currencyFrom} = ${rate.toLocaleString(undefined, {minimumFractionDigits:4, maximumFractionDigits:6})} ${currencyTo}</div>
+                    `;
+                }
+                
+                if (statusEl) {
+                    const d = new Date(data.date);
+                    statusEl.innerHTML = `✅ Rates as of <strong>${data.date}</strong> · Source: Frankfurter / ECB`;
+                }
+                
+                // All-currencies grid
+                const grid = document.getElementById('currency-results-grid');
+                if (grid) {
+                    grid.innerHTML = '';
+                    Object.entries(data.rates).forEach(([code, r]) => {
+                        if (!CURRENCY_LIST[code]) return;
+                        const val = amount * r;
+                        const card = document.createElement('div');
+                        card.className = 'result-card' + (code === currencyTo ? ' highlight-card' : '');
+                        card.innerHTML = `
+                            <div class="result-unit">${code} · ${CURRENCY_LIST[code]}</div>
+                            <div class="result-value">${val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4})}</div>
+                            <button class="copy-button" onclick="copyToClipboard('${val.toFixed(4)}', this)">📋 Copy</button>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            } catch (e) {
+                if (statusEl) statusEl.textContent = '⚠️ Could not fetch rates. Check your connection.';
+                if (mainEl)   mainEl.textContent = '';
+            }
+        }
+        
+        function onCurrencyChange() {
+            currencyFrom = document.getElementById('currency-from').value;
+            currencyTo   = document.getElementById('currency-to').value;
+            loadAndConvertCurrency();
+        }
+        function convertCurrency() { loadAndConvertCurrency(); }
+        function swapCurrency() {
+            const tmp = currencyFrom;
+            currencyFrom = currencyTo;
+            currencyTo = tmp;
+            document.getElementById('currency-from').value = currencyFrom;
+            document.getElementById('currency-to').value   = currencyTo;
+            loadAndConvertCurrency();
+        }
+        // ── End currency ─────────────────────────────────────────────────────
         function renderCategories() {
             const container = document.getElementById('categories');
             container.innerHTML = '';
             
-            Object.keys(conversions).forEach(key => {
-                const category = conversions[key];
+            Object.keys(allCategories).forEach(key => {
+                const category = allCategories[key];
                 const card = document.createElement('div');
                 card.className = 'category-card';
                 card.innerHTML = `
@@ -597,6 +793,11 @@
                 card.classList.remove('active');
             });
             event.currentTarget.classList.add('active');
+            
+            if (categoryKey === 'currency') {
+                renderCurrencyConverter();
+                return;
+            }
             
             const units = Object.keys(conversions[categoryKey].units);
             currentFromUnit = units[0];
